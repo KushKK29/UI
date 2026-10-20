@@ -142,7 +142,7 @@ function ProviderChip({ provider }: { provider: string }) {
 }
 
 // How each CRM's update tool takes a first/last name.
-const NAME_UPDATE: Record<string, (id: string, first: string, last: string) => [string, object]> = {
+export const NAME_UPDATE: Record<string, (id: string, first: string, last: string) => [string, object]> = {
   hubspot: (id, f, l) => ["hubspot_update_contact", { id, properties: { firstname: f, lastname: l } }],
   salesforce: (id, f, l) => ["salesforce_update_contact", { id, data: { FirstName: f, LastName: l } }],
   zoho: (id, f, l) => ["zoho_update_contact", { id, data: { First_Name: f, Last_Name: l } }],
