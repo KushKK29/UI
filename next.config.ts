@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 // The backend (freshdesk-connector, FastAPI) runs separately. Its JSON API and
 // its server-rendered pages are proxied through this app, so the browser only
 // talks to one origin and session cookies stay same-site.
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8004";
+const BACKEND_URL = "https://fresh-desk-mcp.vercel.app";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
