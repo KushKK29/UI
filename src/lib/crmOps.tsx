@@ -133,8 +133,71 @@ export function Crm360({ data, ctx }: Props) {
 
 const CONFIDENCE_KIND: Record<string, "ok" | "warn" | ""> = { exact: "ok", high: "", medium: "warn" };
 
-export function CrmDuplicatesFuzzy({ data }: Props) {
+const PROVIDER_CHIP: Record<string, { letter: string; color: string }> = {
+  hubspot: { letter: "H", color: "#ff7a59" },
+  salesforce: { letter: "S", color: "#00a1e0" },
+  zoho: { letter: "Z", color: "#e42527" },
+  outreach: { letter: "O", color: "#5951ff" },
+  salesloft: { letter: "L", color: "#1fb67a" },
+};
+
+function ProviderChip({ provider }: { provider: string }) {
+  const c = PROVIDER_CHIP[provider] ?? { letter: provider[0]?.toUpperCase() ?? "?", color: "#888" };
+  return <span className="chip" style={{ background: c.color }} title={provider}>{c.letter}</span>;
+}
+
+// How each CRM's update tool takes a first/last name.
+const NAME_UPDATE: Record<string, (id: string, first: string, last: string) => [string, object]> = {
+  hubspot: (id, f, l) => ["hubspot_update_contact", { id, properties: { firstname: f, lastname: l } }],
+  salesforce: (id, f, l) => ["salesforce_update_contact", { id, data: { FirstName: f, LastName: l } }],
+  zoho: (id, f, l) => ["zoho_update_contact", { id, data: { First_Name: f, Last_Name: l } }],
+  outreach: (id, f, l) => ["outreach_update_prospect", { id, attributes: { firstName: f, lastName: l } }],
+  salesloft: (id, f, l) => ["salesloft_update_person", { id, data: { first_name: f, last_name: l } }],
+};
+
+const DISMISS_KEY = "ops_dup_dismissed";
+const loadDismissed = (): string[] => {
+  try {
+    return JSON.parse(api.store.get(DISMISS_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
   const d: api.FuzzyDuplicates = data;
+  const [dismissed, setDismissed] = useState<string[]>(loadDismissed);
+  const [copied, setCopied] = useState("");
+  const groupKey = (g: api.FuzzyDupGroup) => g.email + "|" + g.members.map(m => m.provider + m.id).join(",");
+  const visible = d.duplicate_groups.filter(g => !dismissed.includes(groupKey(g)));
+
+  const dismiss = (g: api.FuzzyDupGroup) => {
+    const next = [...dismissed, groupKey(g)];
+    setDismissed(next);
+    api.store.set(DISMISS_KEY, JSON.stringify(next));
+  };
+  const copy = (email: string) => {
+    navigator.clipboard?.writeText(email);
+    setCopied(email);
+    setTimeout(() => setCopied(""), 1500);
+  };
+  const syncNames = (g: api.FuzzyDupGroup) =>
+    ctx.act(async () => {
+      const primary = g.members.find(m => m.provider === g.recommended_primary);
+      if (!primary?.name) return;
+      const [first, ...rest] = primary.name.trim().split(/\s+/);
+      let done = 0;
+      for (const m of g.members) {
+        if (m === primary || m.name === primary.name || !NAME_UPDATE[m.provider]) continue;
+        const [tool, args] = NAME_UPDATE[m.provider](m.id, first, rest.join(" "));
+        if (await api.run(tool, args, ctx.confirm)) done++;
+      }
+      if (done) {
+        ctx.notify(`Updated ${done} record(s) to match ${primary.provider}.`);
+        await ctx.rerun();
+      }
+    });
+
   return (
     <>
       {!d.providers_checked.length ? (
@@ -146,35 +209,72 @@ export function CrmDuplicatesFuzzy({ data }: Props) {
             fuzzy name+phone/company matches beyond exact email, each tagged with a confidence.
           </p>
           <Skipped providers_skipped={d.providers_skipped} />
-          {d.duplicate_groups.length === 0 ? (
+          {visible.length === 0 ? (
             <div className="empty">No cross-CRM duplicates found.</div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {d.duplicate_groups.map((g, i) => (
-                <div key={g.email + i} className="card" style={{ maxWidth: 520, padding: "16px 20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <div className="mono" style={{ fontWeight: 600 }}>{g.email}</div>
-                    <Badge kind={CONFIDENCE_KIND[g.confidence]}>{g.confidence}</Badge>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {g.members.map(m => (
-                      <div key={m.provider} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                        <span className={`badge ${m.provider === g.recommended_primary ? "ok" : ""}`} style={{ minWidth: 76, textAlign: "center", flexShrink: 0 }}>
-                          {m.provider}
-                        </span>
-                        <span style={{ fontWeight: 500 }}>{m.name || "(no name)"}</span>
-                        <span className="muted">{m.company || ""}</span>
+            <>
+              {dismissed.length > 0 && (
+                <p className="muted">
+                  {dismissed.length} dismissed.{" "}
+                  <a
+                    href="#/crm-duplicates-fuzzy"
+                    onClick={() => {
+                      setDismissed([]);
+                      api.store.set(DISMISS_KEY, null);
+                    }}
+                  >
+                    Show all
+                  </a>
+                </p>
+              )}
+              <div className="dup-grid">
+                {visible.map(g => {
+                  const nameDiffers = !!g.conflicting_fields.name;
+                  return (
+                    <div key={groupKey(g)} className="dup-card">
+                      <div className="dup-head">
+                        <span className="mono dup-email" title={g.email}>{g.email}</span>
+                        <Badge kind={CONFIDENCE_KIND[g.confidence]}>{g.confidence}</Badge>
                       </div>
-                    ))}
-                  </div>
-                  {Object.keys(g.conflicting_fields).length > 0 && (
-                    <div className="err" style={{ marginTop: 10 }}>
-                      ⚠ {Object.keys(g.conflicting_fields).map(f => `${f} differs`).join(", ")}
+                      <div className="dup-members">
+                        {g.members.map(m => (
+                          <div key={m.provider} className="dup-member">
+                            <ProviderChip provider={m.provider} />
+                            <div style={{ minWidth: 0 }}>
+                              <div className="dup-name">
+                                {m.name || "(no name)"}
+                                {m.provider === g.recommended_primary && <span className="dup-primary">primary</span>}
+                              </div>
+                              <div className="muted dup-co">{m.company || "no company"}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {Object.keys(g.conflicting_fields).length > 0 && (
+                        <div className="dup-conflicts">
+                          {Object.keys(g.conflicting_fields).map(f => (
+                            <span key={f} className="badge warn">{f} differs</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="dup-actions">
+                        {nameDiffers && (
+                          <button type="button" className="mini primary" onClick={() => syncNames(g)}>
+                            Sync names
+                          </button>
+                        )}
+                        <button type="button" className="mini" onClick={() => copy(g.email)}>
+                          {copied === g.email ? "Copied" : "Copy email"}
+                        </button>
+                        <button type="button" className="mini ghost" onClick={() => dismiss(g)}>
+                          Dismiss
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </>
       )}
