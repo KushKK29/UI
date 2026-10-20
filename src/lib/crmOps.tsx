@@ -19,35 +19,76 @@ function NoCrm() {
   );
 }
 
+const TABS = [
+  { id: "crm-duplicates", label: "Duplicate detection" },
+  { id: "crm-quality", label: "Data quality audit" },
+  { id: "crm-360", label: "Customer 360" },
+];
+
+function CrmOpsTabs({ active }: { active: string }) {
+  return (
+    <div style={{ display: "flex", gap: 28, borderBottom: "1px solid var(--border)", marginBottom: 22 }}>
+      {TABS.map(t => (
+        <a
+          key={t.id}
+          href={`#/${t.id}`}
+          style={{
+            padding: "10px 2px",
+            fontSize: 13.5,
+            fontWeight: 600,
+            textDecoration: "none",
+            color: t.id === active ? "var(--text)" : "var(--muted-soft)",
+            borderBottom: t.id === active ? "2px solid var(--accent)" : "2px solid transparent",
+          }}
+        >
+          {t.label}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 export function CrmDuplicates({ data }: Props) {
   const d: api.Duplicates = data;
-  if (!d.providers_checked.length) return <NoCrm />;
   return (
     <>
-      <p className="muted">
-        Checked {d.total_contacts_checked} contacts across {d.providers_checked.join(", ") || "none"}.
-      </p>
-      <Skipped providers_skipped={d.providers_skipped} />
-      {d.duplicate_groups.length === 0 ? (
-        <div className="empty">No cross-CRM duplicates found.</div>
+      <CrmOpsTabs active="crm-duplicates" />
+      {!d.providers_checked.length ? (
+        <NoCrm />
       ) : (
-        d.duplicate_groups.map(g => (
-          <div key={g.email} className="card" style={{ marginBottom: 10 }}>
-            <div className="mono" style={{ fontWeight: 600, marginBottom: 8 }}>{g.email}</div>
-            {g.members.map(m => (
-              <div key={m.provider} style={{ display: "flex", gap: 8, alignItems: "center", padding: "4px 0" }}>
-                <Badge kind={m.provider === g.recommended_primary ? "ok" : ""}>{m.provider}</Badge>
-                <span>{m.name || "(no name)"}</span>
-                <span className="muted">{m.company || ""}</span>
-              </div>
-            ))}
-            {Object.keys(g.conflicting_fields).length > 0 && (
-              <div className="err" style={{ marginTop: 8 }}>
-                ⚠ {Object.keys(g.conflicting_fields).map(f => `${f} differs`).join(", ")}
-              </div>
-            )}
-          </div>
-        ))
+        <>
+          <p className="muted">
+            Checked {d.total_contacts_checked} contacts across {d.providers_checked.join(", ") || "none"}.
+          </p>
+          <Skipped providers_skipped={d.providers_skipped} />
+          {d.duplicate_groups.length === 0 ? (
+            <div className="empty">No cross-CRM duplicates found.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {d.duplicate_groups.map(g => (
+                <div key={g.email} className="card" style={{ maxWidth: "none", padding: "16px 20px" }}>
+                  <div className="mono" style={{ fontWeight: 600, marginBottom: 10 }}>{g.email}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {g.members.map(m => (
+                      <div key={m.provider} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                        <span className={`badge ${m.provider === g.recommended_primary ? "ok" : ""}`} style={{ minWidth: 76, textAlign: "center" }}>
+                          {m.provider}
+                        </span>
+                        <span style={{ fontWeight: 500 }}>{m.name || "(no name)"}</span>
+                        <span className="muted">{m.company || ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {Object.keys(g.conflicting_fields).length > 0 && (
+                    <div className="err" style={{ marginTop: 10 }}>
+                      ⚠ {Object.keys(g.conflicting_fields).map(f => `${f} differs`).join(", ")}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </>
   );
@@ -55,35 +96,47 @@ export function CrmDuplicates({ data }: Props) {
 
 export function CrmQuality({ data }: Props) {
   const d: api.QualityResult = data;
-  if (!d.providers_checked.length) return <NoCrm />;
   const entries = Object.entries(d.results);
-  if (!entries.length) return <div className="empty">No connected CRM has any contacts to audit.</div>;
   return (
     <>
-      <Skipped providers_skipped={d.providers_skipped} />
-      {entries.map(([provider, r]) => (
-        <div key={provider} className="card" style={{ marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <b>{provider}</b>
-            <span style={{ fontWeight: 700, fontSize: 18 }} className={r.quality_score == null || r.quality_score >= 80 ? "" : "err"}>
-              {r.quality_score != null ? `${r.quality_score}%` : "—"}
-            </span>
+      <CrmOpsTabs active="crm-quality" />
+      {!d.providers_checked.length ? (
+        <NoCrm />
+      ) : !entries.length ? (
+        <div className="empty">No connected CRM has any contacts to audit.</div>
+      ) : (
+        <>
+          <Skipped providers_skipped={d.providers_skipped} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {entries.map(([provider, r]) => (
+              <div key={provider} className="card" style={{ maxWidth: "none", padding: "16px 20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <b style={{ fontSize: 14 }}>{provider}</b>
+                  <span
+                    style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 22 }}
+                    className={r.quality_score == null || r.quality_score >= 80 ? "" : "err"}
+                  >
+                    {r.quality_score != null ? `${r.quality_score}%` : "—"}
+                  </span>
+                </div>
+                <div className="muted" style={{ marginBottom: 8 }}>
+                  {r.total_contacts} contacts · {r.flagged_count} flagged
+                </div>
+                <Table
+                  cols={[
+                    { h: "Contact", f: (f: any) => f.name || "(no name)" },
+                    { h: "Issues", f: (f: any) => f.issues.join(", ") },
+                    { h: "Severity", f: (f: any) => <Badge kind={f.severity === "high" ? "bad" : f.severity === "medium" ? "warn" : ""}>{f.severity}</Badge> },
+                  ]}
+                  rows={r.flagged.slice(0, 25)}
+                  empty="No issues."
+                />
+                {r.flagged.length > 25 && <p className="muted">+{r.flagged.length - 25} more</p>}
+              </div>
+            ))}
           </div>
-          <div className="muted" style={{ marginBottom: 6 }}>
-            {r.total_contacts} contacts · {r.flagged_count} flagged
-          </div>
-          <Table
-            cols={[
-              { h: "Contact", f: (f: any) => f.name || "(no name)" },
-              { h: "Issues", f: (f: any) => f.issues.join(", ") },
-              { h: "Severity", f: (f: any) => <Badge kind={f.severity === "high" ? "bad" : f.severity === "medium" ? "warn" : ""}>{f.severity}</Badge> },
-            ]}
-            rows={r.flagged.slice(0, 25)}
-            empty="No issues."
-          />
-          {r.flagged.length > 25 && <p className="muted">+{r.flagged.length - 25} more</p>}
-        </div>
-      ))}
+        </>
+      )}
     </>
   );
 }
@@ -92,6 +145,7 @@ export function Crm360({ data }: Props) {
   const d: api.R360 | null = data;
   return (
     <>
+      <CrmOpsTabs active="crm-360" />
       {d?.email && (
         !d.providers_checked.length ? (
           <NoCrm />
@@ -105,15 +159,17 @@ export function Crm360({ data }: Props) {
                 <p className="muted">
                   Found in {d.found_in.length} of {d.providers_checked.length} connected CRMs.
                 </p>
-                {d.records.map(r => (
-                  <div key={r.provider + r.id} className="card" style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}>
-                      <Badge kind="ok">{r.provider}</Badge>
-                      <b>{r.name || "(no name)"}</b>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {d.records.map(r => (
+                    <div key={r.provider + r.id} className="card" style={{ maxWidth: "none", padding: "14px 18px" }}>
+                      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}>
+                        <Badge kind="ok">{r.provider}</Badge>
+                        <b>{r.name || "(no name)"}</b>
+                      </div>
+                      <div className="muted">{r.company || "no company"} · {r.phone || "no phone"}</div>
                     </div>
-                    <div className="muted">{r.company || "no company"} · {r.phone || "no phone"}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </>
             )}
           </>
