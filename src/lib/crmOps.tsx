@@ -1,5 +1,6 @@
 // Ports of the backend's crm_ops_page.py three tabs (duplicate detection,
 // data quality audit, customer 360) onto the JSON /api/crm-ops/* endpoints.
+import { useState } from "react";
 import * as api from "./api";
 import { Badge, Table } from "./ui";
 import type { Props } from "./views";
@@ -141,39 +142,59 @@ export function CrmQuality({ data }: Props) {
   );
 }
 
-export function Crm360({ data }: Props) {
-  const d: api.R360 | null = data;
+export function Crm360({ data, ctx }: Props) {
+  const d: api.SearchResult = data;
+  const [q, setQ] = useState(ctx.args().q || "");
+
   return (
     <>
       <CrmOpsTabs active="crm-360" />
-      {d?.email && (
-        !d.providers_checked.length ? (
-          <NoCrm />
-        ) : (
-          <>
-            <Skipped providers_skipped={d.providers_skipped} />
-            {d.records.length === 0 ? (
-              <div className="empty">No matching contact found for {d.email} in any connected CRM.</div>
-            ) : (
-              <>
-                <p className="muted">
-                  Found in {d.found_in.length} of {d.providers_checked.length} connected CRMs.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {d.records.map(r => (
-                    <div key={r.provider + r.id} className="card" style={{ maxWidth: "none", padding: "14px 18px" }}>
-                      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}>
-                        <Badge kind="ok">{r.provider}</Badge>
-                        <b>{r.name || "(no name)"}</b>
-                      </div>
-                      <div className="muted">{r.company || "no company"} · {r.phone || "no phone"}</div>
+      <form
+        className="bar"
+        style={{ marginBottom: 20 }}
+        onSubmit={e => {
+          e.preventDefault();
+          ctx.args().q = q;
+          ctx.rerun();
+        }}
+      >
+        <label style={{ flex: 1 }}>
+          <input
+            type="text"
+            placeholder="Search by name, email, or company"
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            style={{ borderRadius: 99 }}
+          />
+        </label>
+        <button type="submit">Search</button>
+      </form>
+      {!d?.query ? null : !d.providers_checked.length ? (
+        <NoCrm />
+      ) : (
+        <>
+          <Skipped providers_skipped={d.providers_skipped} />
+          {d.records.length === 0 ? (
+            <div className="empty">No matching contact found for "{d.query}" in any connected CRM.</div>
+          ) : (
+            <>
+              <p className="muted">
+                Found in {d.found_in.length} of {d.providers_checked.length} connected CRMs.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {d.records.map(r => (
+                  <div key={r.provider + r.id} className="card" style={{ maxWidth: 520, padding: "14px 18px" }}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}>
+                      <Badge kind="ok">{r.provider}</Badge>
+                      <b>{r.name || "(no name)"}</b>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        )
+                    <div className="muted">{r.email || "no email"} · {r.company || "no company"} · {r.phone || "no phone"}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
     </>
   );

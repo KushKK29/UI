@@ -556,8 +556,8 @@ export const views: View[] = [
     blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
     needs: [CRMS],
     nav: false,
-    params: [{ name: "email", label: "Email", type: "text", value: "" }],
-    load: a => (a.email ? api.crm360(a.email) : Promise.resolve({ email: "", providers_checked: [], providers_skipped: {}, found_in: [], records: [] })),
+    params: [],
+    load: a => (a.q ? api.crmSearch(a.q) : Promise.resolve({ query: "", providers_checked: [], providers_skipped: {}, found_in: [], records: [] })),
     Body: Crm360,
   },
 ];

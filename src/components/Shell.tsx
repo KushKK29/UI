@@ -147,36 +147,38 @@ export default function Shell() {
             )}
             <h1 className="page-title">{view.title}</h1>
             <div className="page-sub">{view.blurb}</div>
-            <form
-              className="params"
-              onSubmit={e => {
-                e.preventDefault();
-                load(view, argsRef.current);
-              }}
-            >
-              {view.params.map(p => (
-                <label key={p.name}>
-                  {p.label}
-                  {p.type === "select" ? (
-                    <select name={p.name} value={args[p.name] ?? ""} onChange={e => setArg(p.name, e.target.value)}>
-                      {p.options?.map(o => (
-                        <option key={o}>{o}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      name={p.name}
-                      type={p.type}
-                      value={args[p.name] ?? ""}
-                      onChange={e => setArg(p.name, e.target.value)}
-                    />
-                  )}
-                </label>
-              ))}
-              <button type="submit" disabled={loading}>
-                Run
-              </button>
-            </form>
+            {view.params.length > 0 && (
+              <form
+                className="params"
+                onSubmit={e => {
+                  e.preventDefault();
+                  load(view, argsRef.current);
+                }}
+              >
+                {view.params.map(p => (
+                  <label key={p.name}>
+                    {p.label}
+                    {p.type === "select" ? (
+                      <select name={p.name} value={args[p.name] ?? ""} onChange={e => setArg(p.name, e.target.value)}>
+                        {p.options?.map(o => (
+                          <option key={o}>{o}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        name={p.name}
+                        type={p.type}
+                        value={args[p.name] ?? ""}
+                        onChange={e => setArg(p.name, e.target.value)}
+                      />
+                    )}
+                  </label>
+                ))}
+                <button type="submit" disabled={loading}>
+                  Run
+                </button>
+              </form>
+            )}
             <div>
               {notices.map((n, i) => (
                 <div key={i} className={`banner ${n.kind}`}>

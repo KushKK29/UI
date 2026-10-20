@@ -136,7 +136,15 @@ export type R360 = {
   found_in: string[];
   records: { provider: string; id: string; name: string | null; phone: string | null; company: string | null }[];
 };
+export type SearchResult = {
+  query: string;
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  found_in: string[];
+  records: { provider: string; id: string; name: string | null; email: string | null; phone: string | null; company: string | null }[];
+};
 
 export const crmDuplicates = (): Promise<Duplicates> => req("GET", "/api/crm-ops/duplicates");
 export const crmQuality = (): Promise<QualityResult> => req("GET", "/api/crm-ops/quality");
 export const crm360 = (email: string): Promise<R360> => req("GET", `/api/crm-ops/360?email=${encodeURIComponent(email)}`);
+export const crmSearch = (q: string): Promise<SearchResult> => req("GET", `/api/crm-ops/search?q=${encodeURIComponent(q)}`);
