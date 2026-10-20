@@ -10,7 +10,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
-      { source: "/connected-accounts", destination: `${BACKEND_URL}/connected-accounts` },
+      { source: "/login", destination: `${BACKEND_URL}/login` },
+      { source: "/signup", destination: `${BACKEND_URL}/signup` },
+      { source: "/logout", destination: `${BACKEND_URL}/logout` },
+      { source: "/connect/:path*", destination: `${BACKEND_URL}/connect/:path*` },
+      { source: "/connected-accounts",destination: `${BACKEND_URL}/connected-accounts` },
       { source: "/connected-accounts/:path*", destination: `${BACKEND_URL}/connected-accounts/:path*` },
       { source: "/crm-ops", destination: `${BACKEND_URL}/crm-ops` },
       { source: "/crm-ops/:path*", destination: `${BACKEND_URL}/crm-ops/:path*` },
