@@ -95,7 +95,19 @@ export function Accounts({ data, ctx }: Props) {
               <div style={{ flex: 1 }}>
                 <b>{p.name}</b>
                 <div className="muted">
-                  {p.state === "available" ? "OAuth app configured" : <>needs <span className="mono">{p.env?.join("</span> and <span className=\"mono\">")}</span></>}
+                  {p.state === "available" ? (
+                    "OAuth app configured"
+                  ) : (
+                    <>
+                      needs{" "}
+                      {p.env?.map((e, i) => (
+                        <span key={e}>
+                          {i > 0 && " and "}
+                          <span className="mono">{e}</span>
+                        </span>
+                      ))}
+                    </>
+                  )}
                 </div>
               </div>
               {p.state === "available" ? <button onClick={() => connect(p)}>Connect</button> : <span className="muted">Not configured</span>}

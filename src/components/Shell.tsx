@@ -29,6 +29,10 @@ export default function Shell() {
   // "account/asana" -> view "account", sub "asana"
   const [viewName, sub = ""] = viewId.split("/");
   const view = views.find(v => v.id === viewName) ?? views.find(v => !v.top && v.nav !== false)!;
+  // data belongs to whichever view last finished loading; a hash change swaps `view`
+  // one render before the load effect below can clear it, so gate on view id too.
+  const loadedFor = useRef("");
+  const dataIsStale = loadedFor.current !== `${view.id}/${sub}`;
 
   function showLogin(err = "") {
     setStatus(null);
@@ -66,13 +70,17 @@ export default function Shell() {
 
   async function load(v: View, a: Record<string, string>) {
     const id = ++seq.current;
+    const key = `${v.id}/${a.sub ?? ""}`;
     setLoading(true);
     setNotices([]);
     setError("");
     try {
       v.params.filter(p => p.persist).forEach(p => api.store.set(paramKey(p.name), a[p.name] || ""));
       const d = await v.load(a, ctx);
-      if (id === seq.current) setData(d);
+      if (id === seq.current) {
+        loadedFor.current = key;
+        setData(d);
+      }
     } catch (e) {
       if (id !== seq.current) return;
       if (e instanceof api.AuthError) return showLogin("Session expired.");
@@ -175,7 +183,7 @@ export default function Shell() {
                   {n.text}
                 </div>
               ))}
-              {loading ? (
+              {loading || dataIsStale ? (
                 <p className="muted">Loading…</p>
               ) : error ? (
                 <p className="err">{error}</p>
