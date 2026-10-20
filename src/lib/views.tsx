@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import * as api from "./api";
 import { Accounts, AccountDetail } from "./accounts";
 import { Badge, Hrs, money, Skipped, Stack, Table } from "./ui";
-import { CrmDuplicates, CrmQuality, Crm360 } from "./crmOps";
+import { CrmDuplicates, CrmQuality, Crm360, CrmDuplicatesFuzzy, CrmConflicts, CrmStale } from "./crmOps";
 
 export type Kind = "ok" | "warn" | "bad";
 
@@ -559,5 +559,35 @@ export const views: View[] = [
     params: [],
     load: a => (a.q ? api.crmSearch(a.q) : Promise.resolve({ query: "", providers_checked: [], providers_skipped: {}, found_in: [], records: [] })),
     Body: Crm360,
+  },
+  {
+    id: "crm-duplicates-fuzzy",
+    title: "Fuzzy duplicates",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    needs: [CRMS],
+    nav: false,
+    params: [],
+    load: () => api.crmDuplicatesFuzzy(),
+    Body: CrmDuplicatesFuzzy,
+  },
+  {
+    id: "crm-conflicts",
+    title: "Field conflicts",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    needs: [CRMS],
+    nav: false,
+    params: [],
+    load: () => api.crmConflicts(),
+    Body: CrmConflicts,
+  },
+  {
+    id: "crm-stale",
+    title: "Stale contacts",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    needs: [CRMS],
+    nav: false,
+    params: [{ name: "days", label: "Idle at least (days)", type: "number", value: 90 }],
+    load: a => api.crmStale(Number(a.days) || 90),
+    Body: CrmStale,
   },
 ];

@@ -129,13 +129,6 @@ export type QualityResult = {
     flagged: { id: string; name: string | null; issues: string[]; severity: "high" | "medium" | "low" }[];
   }>;
 };
-export type R360 = {
-  email: string;
-  providers_checked: string[];
-  providers_skipped: Record<string, string>;
-  found_in: string[];
-  records: { provider: string; id: string; name: string | null; phone: string | null; company: string | null }[];
-};
 export type SearchResult = {
   query: string;
   providers_checked: string[];
@@ -143,8 +136,46 @@ export type SearchResult = {
   found_in: string[];
   records: { provider: string; id: string; name: string | null; email: string | null; phone: string | null; company: string | null }[];
 };
+export type FuzzyDupGroup = DupGroup & { confidence: "exact" | "high" | "medium" };
+export type FuzzyDuplicates = {
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  duplicate_groups: FuzzyDupGroup[];
+  total_contacts_checked: number;
+};
+export type ConflictField = {
+  values: Record<string, string>;
+  suggested_value: string | null;
+  suggested_from: string | null;
+  basis: "most_recent_activity" | "no_timestamp_available";
+};
+export type ConflictGroup = {
+  email: string;
+  members: { provider: string; id: string; name: string | null; company: string | null }[];
+  conflicting_fields: Record<string, ConflictField>;
+};
+export type ConflictsResult = {
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  conflict_groups: ConflictGroup[];
+  total_conflicts: number;
+};
+export type StaleContact = {
+  provider: string; id: string; name: string | null; email: string | null;
+  company: string | null; last_activity: string | null; idle_days: number | null;
+};
+export type StaleResult = {
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  freshdesk_checked: boolean;
+  days_threshold: number;
+  stale_contacts: StaleContact[];
+  total_contacts_checked: number;
+};
 
 export const crmDuplicates = (): Promise<Duplicates> => req("GET", "/api/crm-ops/duplicates");
 export const crmQuality = (): Promise<QualityResult> => req("GET", "/api/crm-ops/quality");
-export const crm360 = (email: string): Promise<R360> => req("GET", `/api/crm-ops/360?email=${encodeURIComponent(email)}`);
 export const crmSearch = (q: string): Promise<SearchResult> => req("GET", `/api/crm-ops/search?q=${encodeURIComponent(q)}`);
+export const crmDuplicatesFuzzy = (): Promise<FuzzyDuplicates> => req("GET", "/api/crm-ops/duplicates-fuzzy");
+export const crmConflicts = (): Promise<ConflictsResult> => req("GET", "/api/crm-ops/conflicts");
+export const crmStale = (days: number): Promise<StaleResult> => req("GET", `/api/crm-ops/stale?days=${days}`);
