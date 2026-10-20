@@ -2,6 +2,7 @@
 // the shell (components/Shell.tsx) handles routing, params, confirm and errors.
 import { useState, type ReactNode } from "react";
 import * as api from "./api";
+import { Accounts, AccountDetail } from "./accounts";
 import { Badge, Hrs, money, Skipped, Stack, Table } from "./ui";
 
 export type Kind = "ok" | "warn" | "bad";
@@ -32,6 +33,8 @@ export type View = {
   title: string;
   blurb: string;
   needs: string[][];
+  top?: boolean; // listed above "Support ops" in the sidebar
+  nav?: false; // reachable by hash only, not listed
   params: Param[];
   load: (args: Record<string, string>, ctx: Ctx) => Promise<any>;
   Body: (props: Props) => ReactNode;
@@ -416,6 +419,26 @@ function Digest({ data, ctx }: Props) {
 }
 
 export const views: View[] = [
+  {
+    id: "accounts",
+    title: "Connected accounts",
+    blurb: "Tools Claude, ChatGPT, and other agents can use through this hub.",
+    needs: [],
+    top: true,
+    params: [],
+    load: () => api.accounts(),
+    Body: Accounts,
+  },
+  {
+    id: "account",
+    title: "Provider tools",
+    blurb: "",
+    needs: [],
+    nav: false,
+    params: [],
+    load: a => api.accountDetail(a.sub),
+    Body: AccountDetail,
+  },
   {
     id: "collision",
     title: "Outreach collision guard",

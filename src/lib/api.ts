@@ -25,7 +25,7 @@ export type Status = {
 
 export type Confirm = (name: string, preview: unknown) => Promise<boolean>;
 
-// Same-origin: next.config.ts proxies /api/* and /connected-accounts to the backend.
+// Same-origin: next.config.ts proxies /api/* to the backend.
 export const hasToken = () => !!store.get("ops_token");
 export class AuthError extends Error {}
 
@@ -53,6 +53,11 @@ export async function login(email: string, password: string) {
   store.set("ops_token", token);
 }
 
+export async function signup(email: string, password: string) {
+  const { token } = await req("POST", "/api/session/signup", { email, password });
+  store.set("ops_token", token);
+}
+
 export async function logout() {
   try {
     await req("POST", "/api/session/logout");
@@ -75,3 +80,29 @@ export async function run(name: string, args: object, confirm: Confirm): Promise
   }
   return out;
 }
+
+export type Provider = {
+  provider: string;
+  name: string;
+  favicon: string;
+  tool_count: number;
+  state: "connected" | "api_key" | "available" | "not_configured";
+  status?: string;
+  last_used_at?: number | null;
+  env?: string[];
+};
+export type AccountDetail = {
+  name: string;
+  favicon: string;
+  last_used_at?: number | null;
+  server_url: string;
+  instructions: string;
+  tools: { name: string; description: string; requires_confirm: boolean; schema: unknown }[];
+};
+
+export const accounts = (): Promise<{ providers: Provider[] }> => req("GET", "/api/accounts");
+export const accountDetail = (p: string): Promise<AccountDetail> => req("GET", `/api/accounts/${p}`);
+export const connectFreshdesk = (domain: string, api_key: string) =>
+  req("POST", "/api/accounts/freshdesk", { domain, api_key });
+export const disconnect = (p: string) => req("DELETE", `/api/accounts/${p}`);
+export const connectUrl = (p: string): Promise<{ url: string }> => req("POST", `/api/accounts/${p}/connect`);

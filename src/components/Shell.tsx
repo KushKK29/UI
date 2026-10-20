@@ -26,7 +26,9 @@ export default function Shell() {
   const argsRef = useRef<Record<string, string>>({});
   const seq = useRef(0);
 
-  const view = views.find(v => v.id === viewId) ?? views[0];
+  // "account/asana" -> view "account", sub "asana"
+  const [viewName, sub = ""] = viewId.split("/");
+  const view = views.find(v => v.id === viewName) ?? views.find(v => !v.top && v.nav !== false)!;
 
   function showLogin(err = "") {
     setStatus(null);
@@ -109,10 +111,11 @@ export default function Shell() {
           (p.value != null ? String(p.value) : (p.options?.[0] ?? "")),
       ]),
     );
+    init.sub = sub;
     argsRef.current = init;
     setArgs(init);
     load(view, init);
-  }, [phase, view.id]);
+  }, [phase, view.id, sub]);
 
   if (phase === "boot") return null;
   if (phase === "login") return <Login err={loginErr} onSignedIn={boot} />;
@@ -131,7 +134,7 @@ export default function Shell() {
             {missing.length > 0 && (
               <div className="banner">
                 Not connected: {missing.join("; ")}.{" "}
-                <a href="/connected-accounts">Connect accounts ↗</a>
+                <a href="#/accounts">Connect accounts</a>
               </div>
             )}
             <h1 className="page-title">{view.title}</h1>

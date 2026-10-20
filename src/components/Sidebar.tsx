@@ -32,14 +32,18 @@ export function Sidebar({
         <div className="logo-badge" />
         <div className="logo-text">Connector Hub</div>
       </div>
-      <a href="/connected-accounts" className="nav-item">
-        Connected accounts
-      </a>
+      {views
+        .filter(v => v.top)
+        .map(v => (
+          <a key={v.id} href={`#/${v.id}`} className={`nav-item ${v.id === activeId ? "active" : ""}`}>
+            {v.title}
+          </a>
+        ))}
       <a href="/crm-ops" className="nav-item">
         CRM Ops
       </a>
       <div className="nav-section">Support ops</div>
-      {views.map(v => (
+      {views.filter(v => v.nav !== false && !v.top).map(v => (
         <a key={v.id} href={`#/${v.id}`} className={`nav-item ${v.id === activeId ? "active" : ""}`}>
           {v.title}
         </a>
