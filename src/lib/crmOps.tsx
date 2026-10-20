@@ -162,7 +162,7 @@ const loadDismissed = (): string[] => {
 export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
   const d: api.FuzzyDuplicates = data;
   const [dismissed, setDismissed] = useState<string[]>(loadDismissed);
-  const groupKey = (g: api.FuzzyDupGroup) => g.email + "|" + g.members.map(m => m.provider + m.id).join(",");
+  const groupKey = (g: api.FuzzyDupGroup) => g.group_key + "|" + g.members.map(m => m.provider + m.id).join(",");
   const visible = d.duplicate_groups.filter(g => !dismissed.includes(groupKey(g)));
 
   const dismiss = (g: api.FuzzyDupGroup) => {
@@ -223,10 +223,13 @@ export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
               <div className="dup-grid">
                 {visible.map(g => {
                   const nameDiffers = !!g.conflicting_fields.name;
+                  const isEmail = g.confidence === "exact";
                   return (
                     <div key={groupKey(g)} className="dup-card">
                       <div className="dup-head">
-                        <span className="mono dup-email" title={g.email}>{g.email}</span>
+                        <span className="mono dup-email" title={isEmail ? g.group_key : `matched on name: ${g.group_key}`}>
+                          {isEmail ? g.group_key : <span className="muted">matched on name "{g.group_key}"</span>}
+                        </span>
                         <Badge kind={CONFIDENCE_KIND[g.confidence]}>{g.confidence}</Badge>
                       </div>
                       <div className="dup-members">
@@ -256,9 +259,11 @@ export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
                             Sync names
                           </button>
                         )}
-                        <button type="button" className="mini" onClick={() => copy(g.email)}>
-                          Copy email
-                        </button>
+                        {isEmail && (
+                          <button type="button" className="mini" onClick={() => copy(g.group_key)}>
+                            Copy email
+                          </button>
+                        )}
                         <button type="button" className="mini ghost" onClick={() => dismiss(g)}>
                           Dismiss
                         </button>

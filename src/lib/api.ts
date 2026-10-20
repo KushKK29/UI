@@ -119,7 +119,10 @@ export const disconnect = (p: string) => req("DELETE", `/api/accounts/${p}`);
 export const connectUrl = (p: string): Promise<{ url: string }> => req("POST", `/api/accounts/${p}/connect`);
 
 export type DupGroup = {
-  email: string;
+  // Real email for an exact match; a matched NAME (not an email) for a
+  // fuzzy-only match — those cluster members weren't matched on email, so
+  // no single shared email exists. Render generically, not as an address.
+  group_key: string;
   members: { provider: string; id: string; name: string | null; company: string | null }[];
   conflicting_fields: Record<string, Record<string, string>>;
   recommended_primary: string;
