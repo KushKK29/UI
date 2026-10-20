@@ -183,7 +183,7 @@ export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
       for (const m of g.members) {
         if (m === primary || m.name === primary.name || !NAME_UPDATE[m.provider]) continue;
         const [tool, args] = NAME_UPDATE[m.provider](m.id, first, rest.join(" "));
-        if (await api.run(tool, args, ctx.confirm)) done++;
+        if (await api.runCrmTool(m.provider, tool, args, ctx.confirm)) done++;
       }
       if (done) {
         ctx.notify(`Updated ${done} record(s) to match ${primary.provider}.`);

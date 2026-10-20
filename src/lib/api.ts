@@ -81,6 +81,17 @@ export async function run(name: string, args: object, confirm: Confirm): Promise
   return out;
 }
 
+// Like run(), but for a write tool owned by a connected CRM (e.g.
+// salesforce_update_contact) rather than a support_ops/crm_ops tool.
+export async function runCrmTool(provider: string, name: string, args: object, confirm: Confirm): Promise<any> {
+  let out = await req("POST", `/api/ops/crm-tools/${provider}/${name}`, { args });
+  if (out.confirm_token) {
+    if (!(await confirm(name, out.preview))) return null;
+    out = await req("POST", `/api/ops/crm-tools/${provider}/${name}`, { args, confirm_token: out.confirm_token });
+  }
+  return out;
+}
+
 export type Provider = {
   provider: string;
   name: string;
