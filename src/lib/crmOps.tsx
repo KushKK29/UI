@@ -66,12 +66,12 @@ export function CrmDuplicates({ data }: Props) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {d.duplicate_groups.map(g => (
-                <div key={g.email} className="card" style={{ maxWidth: "none", padding: "16px 20px" }}>
+                <div key={g.email} className="card" style={{ maxWidth: 520, padding: "16px 20px" }}>
                   <div className="mono" style={{ fontWeight: 600, marginBottom: 10 }}>{g.email}</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {g.members.map(m => (
-                      <div key={m.provider} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        <span className={`badge ${m.provider === g.recommended_primary ? "ok" : ""}`} style={{ minWidth: 76, textAlign: "center" }}>
+                      <div key={m.provider} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                        <span className={`badge ${m.provider === g.recommended_primary ? "ok" : ""}`} style={{ minWidth: 76, textAlign: "center", flexShrink: 0 }}>
                           {m.provider}
                         </span>
                         <span style={{ fontWeight: 500 }}>{m.name || "(no name)"}</span>
