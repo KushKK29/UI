@@ -383,6 +383,37 @@ function Stale({ data }: Props) {
   );
 }
 
+function FollowupGaps({ data }: Props) {
+  return (
+    <>
+      <Skipped data={data} />
+      <h2>Stale open tickets</h2>
+      <Table
+        cols={[
+          { h: "Ticket", f: ticketLink },
+          { h: "Company", f: (r: any) => r.company || "—" },
+          { h: "Priority", f: (r: any) => r.priority },
+          { h: "Idle", f: (r: any) => (r.idle_days == null ? "unknown" : `${r.idle_days}d`) },
+        ]}
+        rows={data.stale_tickets}
+        empty="No stale open tickets."
+      />
+      <h2>Stale open deals</h2>
+      <Table
+        cols={[
+          { h: "Deal", f: (r: any) => <>{r.name} <span className="muted">{r.provider}</span></> },
+          { h: "Account", f: (r: any) => r.account },
+          { h: "Value", f: (r: any) => money(r.amount) },
+          { h: "Stage", f: (r: any) => r.stage },
+          { h: "Idle", f: (r: any) => (r.idle_days == null ? "unknown" : `${r.idle_days}d`) },
+        ]}
+        rows={data.stale_deals}
+        empty="No stale open deals."
+      />
+    </>
+  );
+}
+
 function Digest({ data, ctx }: Props) {
   const [gid, setGid] = useState(ctx.status.digest_project_gid || "");
 
@@ -521,6 +552,15 @@ export const views: View[] = [
     params: [{ name: "days", label: "Idle at least (days)", type: "number", value: 14 }],
     load: (a, ctx) => tool("stale_deal_vs_open_ticket")({ days: Number(a.days) || 14 }, ctx),
     Body: Stale,
+  },
+  {
+    id: "followup-gaps",
+    title: "Follow-up gaps",
+    blurb: "Open tickets and open deals with no activity in N days — a combined review queue across support and sales.",
+    needs: [["freshdesk"], CRMS, DEALS],
+    params: [{ name: "days", label: "Idle at least (days)", type: "number", value: 7 }],
+    load: (a, ctx) => tool("customer_followup_gap_detector")({ days: Number(a.days) || 7 }, ctx),
+    Body: FollowupGaps,
   },
   {
     id: "digest",
