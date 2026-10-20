@@ -113,12 +113,6 @@ export type DupGroup = {
   conflicting_fields: Record<string, Record<string, string>>;
   recommended_primary: string;
 };
-export type Duplicates = {
-  providers_checked: string[];
-  providers_skipped: Record<string, string>;
-  duplicate_groups: DupGroup[];
-  total_contacts_checked: number;
-};
 export type QualityResult = {
   providers_checked: string[];
   providers_skipped: Record<string, string>;
@@ -173,7 +167,6 @@ export type StaleResult = {
   total_contacts_checked: number;
 };
 
-export const crmDuplicates = (): Promise<Duplicates> => req("GET", "/api/crm-ops/duplicates");
 export const crmQuality = (): Promise<QualityResult> => req("GET", "/api/crm-ops/quality");
 export const crmSearch = (q: string): Promise<SearchResult> => req("GET", `/api/crm-ops/search?q=${encodeURIComponent(q)}`);
 export const crmDuplicatesFuzzy = (): Promise<FuzzyDuplicates> => req("GET", "/api/crm-ops/duplicates-fuzzy");

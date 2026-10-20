@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as api from "@/lib/api";
-import { views, CRM_OPS_TABS, type Ctx, type Kind, type View } from "@/lib/views";
+import { CRM_OPS_TABS } from "@/lib/crmOps";
+import { views, type Ctx, type Kind, type View } from "@/lib/views";
 import { Confirm, type Pending } from "./Confirm";
 import { Login } from "./Login";
 import { Sidebar } from "./Sidebar";

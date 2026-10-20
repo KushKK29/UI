@@ -133,17 +133,12 @@ export function Crm360({ data, ctx }: Props) {
 
 const CONFIDENCE_KIND: Record<string, "ok" | "warn" | ""> = { exact: "ok", high: "", medium: "warn" };
 
-const PROVIDER_CHIP: Record<string, { letter: string; color: string }> = {
-  hubspot: { letter: "H", color: "#ff7a59" },
-  salesforce: { letter: "S", color: "#00a1e0" },
-  zoho: { letter: "Z", color: "#e42527" },
-  outreach: { letter: "O", color: "#5951ff" },
-  salesloft: { letter: "L", color: "#1fb67a" },
+const PROVIDER_COLOR: Record<string, string> = {
+  hubspot: "#ff7a59", salesforce: "#00a1e0", zoho: "#e42527", outreach: "#5951ff", salesloft: "#1fb67a",
 };
 
 function ProviderChip({ provider }: { provider: string }) {
-  const c = PROVIDER_CHIP[provider] ?? { letter: provider[0]?.toUpperCase() ?? "?", color: "#888" };
-  return <span className="chip" style={{ background: c.color }} title={provider}>{c.letter}</span>;
+  return <span className="chip" style={{ background: PROVIDER_COLOR[provider] ?? "#888" }} title={provider}>{provider[0]?.toUpperCase()}</span>;
 }
 
 // How each CRM's update tool takes a first/last name.
@@ -167,7 +162,6 @@ const loadDismissed = (): string[] => {
 export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
   const d: api.FuzzyDuplicates = data;
   const [dismissed, setDismissed] = useState<string[]>(loadDismissed);
-  const [copied, setCopied] = useState("");
   const groupKey = (g: api.FuzzyDupGroup) => g.email + "|" + g.members.map(m => m.provider + m.id).join(",");
   const visible = d.duplicate_groups.filter(g => !dismissed.includes(groupKey(g)));
 
@@ -178,8 +172,7 @@ export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
   };
   const copy = (email: string) => {
     navigator.clipboard?.writeText(email);
-    setCopied(email);
-    setTimeout(() => setCopied(""), 1500);
+    ctx.notify(`Copied ${email}`);
   };
   const syncNames = (g: api.FuzzyDupGroup) =>
     ctx.act(async () => {
@@ -264,7 +257,7 @@ export function CrmDuplicatesFuzzy({ data, ctx }: Props) {
                           </button>
                         )}
                         <button type="button" className="mini" onClick={() => copy(g.email)}>
-                          {copied === g.email ? "Copied" : "Copy email"}
+                          Copy email
                         </button>
                         <button type="button" className="mini ghost" onClick={() => dismiss(g)}>
                           Dismiss

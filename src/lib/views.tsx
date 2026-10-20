@@ -6,7 +6,6 @@ import { Accounts, AccountDetail } from "./accounts";
 import { Badge, Hrs, money, Skipped, Stack, Table } from "./ui";
 import { CrmQuality, Crm360, CrmDuplicatesFuzzy, CrmConflicts, CrmStale } from "./crmOps";
 
-export { CRM_OPS_TABS } from "./crmOps";
 
 export type Kind = "ok" | "warn" | "bad";
 
