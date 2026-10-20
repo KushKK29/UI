@@ -6,12 +6,14 @@ import type { Props } from "./views";
 
 const when = (ts?: number | null) => (ts ? new Date(ts * 1000).toISOString().slice(0, 16).replace("T", " ") + " UTC" : "never");
 
+const tile = { width: 32, height: 32, borderRadius: 9, flexShrink: 0 } as const;
+
 function Icon({ src, dim }: { src: string; dim?: boolean }) {
-  return <img src={src} alt="" width={24} height={24} style={{ borderRadius: 6, opacity: dim ? 0.45 : 1 }} />;
+  return <img src={src} alt="" width={32} height={32} style={{ ...tile, objectFit: "cover", opacity: dim ? 0.5 : 1 }} />;
 }
 
-const row = { display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: "1px solid var(--border-soft)" } as const;
-const list = { border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", marginBottom: 28, background: "var(--card)" } as const;
+const row = { display: "flex", alignItems: "center", gap: 14, background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 18px" } as const;
+const list = { display: "flex", flexDirection: "column", gap: 8, marginBottom: 26 } as const;
 
 function FreshdeskForm({ ctx }: Pick<Props, "ctx">) {
   const [domain, setDomain] = useState("");
@@ -59,11 +61,27 @@ export function Accounts({ data, ctx }: Props) {
       location.href = (await api.connectUrl(p.provider)).url;
     });
 
+  const toolCount = connected.reduce((n, p) => n + p.tool_count, 0);
+  const needsAttention = connected.filter(p => p.status !== "active").length;
+  const stat = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, padding: "18px 20px" } as const;
+  const statNum = { fontFamily: "var(--font-serif)", fontSize: 26, fontWeight: 600 } as const;
+
   return (
     <>
-      <p className="muted">
-        {connected.length} of {ps.length} providers connected · {connected.reduce((n, p) => n + p.tool_count, 0)} tools available
-      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 28 }}>
+        <div style={stat}>
+          <div style={statNum}>{connected.length}<span style={{ color: "var(--muted-soft)", fontSize: 16 }}> / {ps.length}</span></div>
+          <div className="muted" style={{ marginTop: 2 }}>Providers connected</div>
+        </div>
+        <div style={stat}>
+          <div style={{ ...statNum, color: "var(--accent)" }}>{toolCount}</div>
+          <div className="muted" style={{ marginTop: 2 }}>Tools available</div>
+        </div>
+        <div style={stat}>
+          <div style={statNum}>{needsAttention}</div>
+          <div className="muted" style={{ marginTop: 2 }}>Needs attention</div>
+        </div>
+      </div>
       <h2>Connected</h2>
       <div style={list}>
         {connected.length === 0 && <div className="empty">Nothing connected yet — connect a provider below.</div>}
@@ -126,10 +144,11 @@ export function AccountDetail({ data }: Props) {
       <p>
         <a href="#/accounts">← Connected accounts</a>
       </p>
-      <p className="muted">
-        <Icon src={d.favicon} /> {d.tools.length} tools · last used {when(d.last_used_at)}
-      </p>
-      <div className="banner">{d.instructions}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "16px 0 6px" }}>
+        <img src={d.favicon} alt="" width={44} height={44} style={{ borderRadius: 12 }} />
+        <div className="muted">{d.tools.length} tools · last used {when(d.last_used_at)}</div>
+      </div>
+      <div className="banner" style={{ marginTop: 20 }}>{d.instructions}</div>
       <h2>Use these tools in your agent</h2>
       <p className="muted">Every connected provider's tools are reachable through the same MCP server URL.</p>
       <pre className="mono">{d.server_url}</pre>
@@ -139,16 +158,18 @@ export function AccountDetail({ data }: Props) {
         <li>Any MCP client: streamable-http with OAuth 2.1 discovery; client credentials come from dynamic registration.</li>
       </ul>
       <h2>Available tools</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
       {d.tools.map(t => (
-        <div key={t.name} className="card" style={{ marginBottom: 8, padding: "12px 16px" }}>
-          <span className="mono">{t.name}</span> {t.requires_confirm && <span className="badge warn">needs confirm</span>}
-          <div>{t.description}</div>
+        <div key={t.name} className="card" style={{ maxWidth: "none", padding: "14px 16px" }}>
+          <span className="mono" style={{ fontWeight: 600 }}>{t.name}</span> {t.requires_confirm && <span className="badge warn">needs confirm</span>}
+          <div className="muted" style={{ marginTop: 4 }}>{t.description}</div>
           <details>
             <summary className="muted">Input schema</summary>
             <pre className="mono">{JSON.stringify(t.schema, null, 2)}</pre>
           </details>
         </div>
       ))}
+      </div>
     </>
   );
 }
