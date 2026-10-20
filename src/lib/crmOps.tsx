@@ -20,91 +20,19 @@ function NoCrm() {
   );
 }
 
-const TABS = [
-  { id: "crm-duplicates", label: "Duplicate detection" },
-  { id: "crm-duplicates-fuzzy", label: "Fuzzy duplicates" },
+export const CRM_OPS_TABS = [
+  { id: "crm-duplicates-fuzzy", label: "Duplicate detection" },
   { id: "crm-quality", label: "Data quality audit" },
   { id: "crm-conflicts", label: "Field conflicts" },
   { id: "crm-stale", label: "Stale contacts" },
   { id: "crm-360", label: "Customer 360" },
 ];
 
-function CrmOpsTabs({ active }: { active: string }) {
-  return (
-    <div style={{ display: "flex", gap: 24, borderBottom: "1px solid var(--border)", marginBottom: 22, flexWrap: "wrap" }}>
-      {TABS.map(t => (
-        <a
-          key={t.id}
-          href={`#/${t.id}`}
-          style={{
-            padding: "10px 2px",
-            fontSize: 13.5,
-            fontWeight: 600,
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-            color: t.id === active ? "var(--text)" : "var(--muted-soft)",
-            borderBottom: t.id === active ? "2px solid var(--accent)" : "2px solid transparent",
-          }}
-        >
-          {t.label}
-        </a>
-      ))}
-    </div>
-  );
-}
-
-export function CrmDuplicates({ data }: Props) {
-  const d: api.Duplicates = data;
-  return (
-    <>
-      <CrmOpsTabs active="crm-duplicates" />
-      {!d.providers_checked.length ? (
-        <NoCrm />
-      ) : (
-        <>
-          <p className="muted">
-            Checked {d.total_contacts_checked} contacts across {d.providers_checked.join(", ") || "none"}.
-          </p>
-          <Skipped providers_skipped={d.providers_skipped} />
-          {d.duplicate_groups.length === 0 ? (
-            <div className="empty">No cross-CRM duplicates found.</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {d.duplicate_groups.map(g => (
-                <div key={g.email} className="card" style={{ maxWidth: 520, padding: "16px 20px" }}>
-                  <div className="mono" style={{ fontWeight: 600, marginBottom: 10 }}>{g.email}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {g.members.map(m => (
-                      <div key={m.provider} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                        <span className={`badge ${m.provider === g.recommended_primary ? "ok" : ""}`} style={{ minWidth: 76, textAlign: "center", flexShrink: 0 }}>
-                          {m.provider}
-                        </span>
-                        <span style={{ fontWeight: 500 }}>{m.name || "(no name)"}</span>
-                        <span className="muted">{m.company || ""}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {Object.keys(g.conflicting_fields).length > 0 && (
-                    <div className="err" style={{ marginTop: 10 }}>
-                      ⚠ {Object.keys(g.conflicting_fields).map(f => `${f} differs`).join(", ")}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </>
-  );
-}
-
 export function CrmQuality({ data }: Props) {
   const d: api.QualityResult = data;
   const entries = Object.entries(d.results);
   return (
     <>
-      <CrmOpsTabs active="crm-quality" />
       {!d.providers_checked.length ? (
         <NoCrm />
       ) : !entries.length ? (
@@ -152,7 +80,6 @@ export function Crm360({ data, ctx }: Props) {
 
   return (
     <>
-      <CrmOpsTabs active="crm-360" />
       <form
         className="bar"
         style={{ marginBottom: 20 }}
@@ -210,7 +137,6 @@ export function CrmDuplicatesFuzzy({ data }: Props) {
   const d: api.FuzzyDuplicates = data;
   return (
     <>
-      <CrmOpsTabs active="crm-duplicates-fuzzy" />
       {!d.providers_checked.length ? (
         <NoCrm />
       ) : (
@@ -260,7 +186,6 @@ export function CrmConflicts({ data }: Props) {
   const d: api.ConflictsResult = data;
   return (
     <>
-      <CrmOpsTabs active="crm-conflicts" />
       {!d.providers_checked.length ? (
         <NoCrm />
       ) : (
@@ -306,7 +231,6 @@ export function CrmStale({ data }: Props) {
   const d: api.StaleResult = data;
   return (
     <>
-      <CrmOpsTabs active="crm-stale" />
       {!d.providers_checked.length ? (
         <NoCrm />
       ) : (

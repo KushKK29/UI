@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as api from "@/lib/api";
-import { views, type Ctx, type Kind, type View } from "@/lib/views";
+import { views, CRM_OPS_TABS, type Ctx, type Kind, type View } from "@/lib/views";
 import { Confirm, type Pending } from "./Confirm";
 import { Login } from "./Login";
 import { Sidebar } from "./Sidebar";
@@ -147,6 +147,27 @@ export default function Shell() {
             )}
             <h1 className="page-title">{view.title}</h1>
             <div className="page-sub">{view.blurb}</div>
+            {view.id.startsWith("crm-") && (
+              <div style={{ display: "flex", gap: 24, borderBottom: "1px solid var(--border)", marginBottom: 22, flexWrap: "wrap" }}>
+                {CRM_OPS_TABS.map(t => (
+                  <a
+                    key={t.id}
+                    href={`#/${t.id}`}
+                    style={{
+                      padding: "10px 2px",
+                      fontSize: 13.5,
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
+                      color: t.id === view.id ? "var(--text)" : "var(--muted-soft)",
+                      borderBottom: t.id === view.id ? "2px solid var(--accent)" : "2px solid transparent",
+                    }}
+                  >
+                    {t.label}
+                  </a>
+                ))}
+              </div>
+            )}
             {view.params.length > 0 && (
               <form
                 className="params"

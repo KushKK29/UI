@@ -4,7 +4,9 @@ import { useState, type ReactNode } from "react";
 import * as api from "./api";
 import { Accounts, AccountDetail } from "./accounts";
 import { Badge, Hrs, money, Skipped, Stack, Table } from "./ui";
-import { CrmDuplicates, CrmQuality, Crm360, CrmDuplicatesFuzzy, CrmConflicts, CrmStale } from "./crmOps";
+import { CrmQuality, Crm360, CrmDuplicatesFuzzy, CrmConflicts, CrmStale } from "./crmOps";
+
+export { CRM_OPS_TABS } from "./crmOps";
 
 export type Kind = "ok" | "warn" | "bad";
 
@@ -531,16 +533,6 @@ export const views: View[] = [
     Body: Digest,
   },
   {
-    id: "crm-duplicates",
-    title: "Duplicate detection",
-    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
-    needs: [CRMS],
-    nav: false,
-    params: [],
-    load: () => api.crmDuplicates(),
-    Body: CrmDuplicates,
-  },
-  {
     id: "crm-quality",
     title: "Data quality audit",
     blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
@@ -562,8 +554,8 @@ export const views: View[] = [
   },
   {
     id: "crm-duplicates-fuzzy",
-    title: "Fuzzy duplicates",
-    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    title: "Duplicate detection",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts. Includes fuzzy name+phone/company matches beyond exact email, each tagged with a confidence.",
     needs: [CRMS],
     nav: false,
     params: [],
