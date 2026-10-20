@@ -39,9 +39,14 @@ export function Sidebar({
             {v.title}
           </a>
         ))}
-      <a href="/crm-ops" className="nav-item">
-        CRM Ops
-      </a>
+      <div className="nav-section">CRM Ops</div>
+      {views
+        .filter(v => v.id === "crm-duplicates" || v.id === "crm-quality" || v.id === "crm-360")
+        .map(v => (
+          <a key={v.id} href={`#/${v.id}`} className={`nav-item ${v.id === activeId ? "active" : ""}`}>
+            {v.title}
+          </a>
+        ))}
       <div className="nav-section">Support ops</div>
       {views.filter(v => v.nav !== false && !v.top).map(v => (
         <a key={v.id} href={`#/${v.id}`} className={`nav-item ${v.id === activeId ? "active" : ""}`}>

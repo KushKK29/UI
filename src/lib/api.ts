@@ -106,3 +106,37 @@ export const connectFreshdesk = (domain: string, api_key: string) =>
   req("POST", "/api/accounts/freshdesk", { domain, api_key });
 export const disconnect = (p: string) => req("DELETE", `/api/accounts/${p}`);
 export const connectUrl = (p: string): Promise<{ url: string }> => req("POST", `/api/accounts/${p}/connect`);
+
+export type DupGroup = {
+  email: string;
+  members: { provider: string; id: string; name: string | null; company: string | null }[];
+  conflicting_fields: Record<string, Record<string, string>>;
+  recommended_primary: string;
+};
+export type Duplicates = {
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  duplicate_groups: DupGroup[];
+  total_contacts_checked: number;
+};
+export type QualityResult = {
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  results: Record<string, {
+    total_contacts: number;
+    flagged_count: number;
+    quality_score: number | null;
+    flagged: { id: string; name: string | null; issues: string[]; severity: "high" | "medium" | "low" }[];
+  }>;
+};
+export type R360 = {
+  email: string;
+  providers_checked: string[];
+  providers_skipped: Record<string, string>;
+  found_in: string[];
+  records: { provider: string; id: string; name: string | null; phone: string | null; company: string | null }[];
+};
+
+export const crmDuplicates = (): Promise<Duplicates> => req("GET", "/api/crm-ops/duplicates");
+export const crmQuality = (): Promise<QualityResult> => req("GET", "/api/crm-ops/quality");
+export const crm360 = (email: string): Promise<R360> => req("GET", `/api/crm-ops/360?email=${encodeURIComponent(email)}`);

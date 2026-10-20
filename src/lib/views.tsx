@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import * as api from "./api";
 import { Accounts, AccountDetail } from "./accounts";
 import { Badge, Hrs, money, Skipped, Stack, Table } from "./ui";
+import { CrmDuplicates, CrmQuality, Crm360 } from "./crmOps";
 
 export type Kind = "ok" | "warn" | "bad";
 
@@ -528,5 +529,35 @@ export const views: View[] = [
     params: [],
     load: tool("daily_digest"),
     Body: Digest,
+  },
+  {
+    id: "crm-duplicates",
+    title: "Duplicate detection",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    needs: [CRMS],
+    nav: false,
+    params: [],
+    load: () => api.crmDuplicates(),
+    Body: CrmDuplicates,
+  },
+  {
+    id: "crm-quality",
+    title: "Data quality audit",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    needs: [CRMS],
+    nav: false,
+    params: [],
+    load: () => api.crmQuality(),
+    Body: CrmQuality,
+  },
+  {
+    id: "crm-360",
+    title: "Customer 360",
+    blurb: "Cross-CRM analysis across your connected HubSpot, Salesforce, Zoho, Outreach, and SalesLoft accounts.",
+    needs: [CRMS],
+    nav: false,
+    params: [{ name: "email", label: "Email", type: "text", value: "" }],
+    load: a => (a.email ? api.crm360(a.email) : Promise.resolve({ email: "", providers_checked: [], providers_skipped: {}, found_in: [], records: [] })),
+    Body: Crm360,
   },
 ];
